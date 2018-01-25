@@ -1,0 +1,80 @@
+{
+  "description": "Pipeline for parsing Exim4 mainlogs.",
+  "processors": [
+    {
+      "grok": {
+        "field": "message",
+        "pattern_definitions": {
+          "EXIM4_DATETIME": "%{YEAR}-%{MONTHNUM}-%{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND}",
+          "EXIM4_TZ": "[+-]\\d{4}",
+          "EXIM4_DATETIME_TZ": "%{EXIM4_DATETIME:exim4.datetime}( %{EXIM4_TZ:exim4.timezone})?",
+          "EXIM4_ALNUM": "[0-9A-Za-z]",
+          "EXIM4_INTERNAL_MSGID": "%{EXIM4_ALNUM}{6}-%{EXIM4_ALNUM}{6}-%{EXIM4_ALNUM}{2}",
+          "EXIM4_FLAG_RECEPTION": "<=",
+          "EXIM4_FLAG_DELIVERY": "=>|->|>>",
+          "EXIM4_FLAG": "%{EXIM4_FLAG_RECEPTION}|\\(=|%{EXIM4_FLAG_DELIVERY}|\\*>|\\*\\*|==",
+          "EXIM4_REMOTEHOST": "H=\\(?%{IPORHOST:exim4.remote_host}\\)? \\[%{IP:exim4.remote_addr}\\]",
+          "EXIM4_LOCAL_USER": "U=%{USERNAME:exim4.local_user}",
+          "EXIM4_BOUNCE_REF": "R=%{NOTSPACE:exim4.bounce_ref}",
+          "EXIM4_PROTO": "P=%{NOTSPACE:exim4.protocol}",
+          "EXIM4_SIZE": "S=%{INT:exim4.msg_size}",
+          "EXIM4_TLS_CIPHER_SUITE": "X=%{NOTSPACE:exim4.tls.cipher_suite}",
+          "EXIM4_CV": "CV=%{WORD:exim4.tls.cert_verification_status}",
+          "EXIM4_SNI": "SNI=%{QUOTEDSTRING:exim4.tls.server_name_ident}",
+          "EXIM4_CHUNKING": "K",
+          "EXIM4_AUTHENTICATOR": "A=%{NOTSPACE:exim4.authenticator}",
+          "EXIM4_MSG_ID": "id=%{NOTSPACE:exim4.msg_id}",
+          "EXIM4_ROUTER": "R=%{NOTSPACE:exim4.router}",
+          "EXIM4_TRANSPORT": "T=%{NOTSPACE:exim4.transport}",
+          "EXIM4_SHADOW_TRANSPORT": "ST=%{NOTSPACE:exim4.shadow_transport}(%{SPACE}\\(%{DATA:exim4.shadow_transport_error}\\))?",
+          "EXIM4_FINAL_ADDRESS": "%{NOTSPACE:exim4.final_address}",
+          "EXIM4_ORIGINAL_ADDRESS": "<%{NOTSPACE:exim4.original_address}>",
+          "EXIM4_INTERMEDIATE_ADDRESS": "\\(%{NOTSPACE:exim4.intermediate_address}\\)",
+          "EXIM4_DELIVERY_ADDRESS": "%{EXIM4_FINAL_ADDRESS}(%{SPACE}%{EXIM4_INTERMEDIATE_ADDRESS})?(%{SPACE}%{EXIM4_ORIGINAL_ADDRESS})?",
+          "EXIM4_RECEPTION_FIELD": "%{EXIM4_REMOTEHOST}|%{EXIM4_LOCAL_USER}|%{EXIM4_BOUNCE_REF}|%{EXIM4_PROTO}|%{EXIM4_SIZE}|%{EXIM4_TLS_CIPHER_SUITE}|%{EXIM4_CV}|%{EXIM4_SNI}|%{EXIM4_CHUNKING:exim4.chunking}|%{EXIM4_AUTHENTICATOR}|%{EXIM4_MSG_ID}",
+          "EXIM4_DELIVERY_FIELD": "%{EXIM4_ROUTER}|%{EXIM4_TRANSPORT}|%{EXIM4_AUTHENTICATOR}|%{EXIM4_SHADOW_TRANSPORT}|%{EXIM4_REMOTEHOST}",
+          "EXIM4_LINE_START": "^%{EXIM4_DATETIME_TZ} %{EXIM4_INTERNAL_MSGID:exim4.id}",
+          "EXIM4_RECEPTION": "%{EXIM4_LINE_START} %{EXIM4_FLAG_RECEPTION:exim4.flag} %{NOTSPACE:exim4.envelope_sender} (%{SPACE}%{EXIM4_RECEPTION_FIELD})*",
+          "EXIM4_DELIVERY": "%{EXIM4_LINE_START} %{EXIM4_FLAG_DELIVERY:exim4.flag} %{EXIM4_DELIVERY_ADDRESS} (%{SPACE}%{EXIM4_DELIVERY_FIELD})*"
+        },
+        "patterns": [
+          "%{EXIM4_RECEPTION}",
+          "%{EXIM4_DELIVERY}"
+        ]
+      }
+    },
+    {
+      "rename": {
+        "field": "message",
+        "target_field": "exim4.raw_msg"
+      }
+    },
+    {
+      "set": {
+        "field": "exim4.timezone",
+        "value": "UTC",
+        "override": false
+      }
+    },
+    {
+      "date": {
+        "field": "exim4.datetime",
+        "target_field": "@timestamp",
+        "timezone": "{{ exim4.timezone }}",
+        "formats": [
+          "yyyy-MM-dd HH:mm:ss"
+        ]
+      }
+    },
+    {
+      "remove": {
+        "field": "exim4.datetime"
+      }
+    },
+    {
+      "remove": {
+        "field": "exim4.timezone"
+      }
+    }
+  ]
+}
