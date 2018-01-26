@@ -13,7 +13,7 @@
           "EXIM4_FLAG_RECEPTION": "<=",
           "EXIM4_FLAG_DELIVERY": "=>|->|>>",
           "EXIM4_FLAG": "%{EXIM4_FLAG_RECEPTION}|\\(=|%{EXIM4_FLAG_DELIVERY}|\\*>|\\*\\*|==",
-          "EXIM4_REMOTEHOST": "H=\\(?%{IPORHOST:exim4.remote_host}\\)? \\[%{IP:exim4.remote_addr}\\]",
+          "EXIM4_REMOTEHOST": "H=\\(?%{IPORHOST:exim4.remote_host}\\)?(%{SPACE}\\(%{IPORHOST:exim4.helo_name}\\))? \\[%{IP:exim4.remote_addr}\\]",
           "EXIM4_LOCAL_USER": "U=%{USERNAME:exim4.local_user}",
           "EXIM4_BOUNCE_REF": "R=%{NOTSPACE:exim4.bounce_ref}",
           "EXIM4_PROTO": "P=%{NOTSPACE:exim4.protocol}",
