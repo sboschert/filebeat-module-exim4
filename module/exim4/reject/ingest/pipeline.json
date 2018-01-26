@@ -10,7 +10,7 @@
           "EXIM4_DATETIME_TZ": "%{EXIM4_DATETIME:exim4.datetime}( %{EXIM4_TZ:exim4.timezone})?",
           "EXIM4_ALNUM": "[0-9A-Za-z]",
           "EXIM4_INTERNAL_MSGID": "%{EXIM4_ALNUM}{6}-%{EXIM4_ALNUM}{6}-%{EXIM4_ALNUM}{2}",
-          "EXIM4_LINE_START": "^%{EXIM4_DATETIME_TZ} %{EXIM4_INTERNAL_MSGID:exim4.id}",
+          "EXIM4_LINE_START": "^%{EXIM4_DATETIME_TZ}( %{EXIM4_INTERNAL_MSGID:exim4.id})?",
 
           "EXIM4_REMOTEHOST": "H=\\(?%{IPORHOST:exim4.remote_host}\\)?(%{SPACE}\\(%{IPORHOST:exim4.helo_name}\\))? \\[%{IP:exim4.remote_addr}\\]",
           "EXIM4_SENDER_ADDRESS": "F=<%{NOTSPACE:exim4.sender_address}>",
